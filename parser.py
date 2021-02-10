@@ -13,6 +13,8 @@ import codecs
 
 DELIMS = [" ", "\t", "\n", "", "#", "\"", "\'"]
 
+SPACES = [" ", "\t"]
+
 RESERVED = [
     "pass",
     "break",
@@ -194,6 +196,20 @@ class parser(object):
     def parse_operator(self):
         return self.parse_symbols(OPS, "operator")
 
+    def bracket_follow(self):
+        forw = 0
+        found = False
+        while True:
+            sym = self.get_symbol()
+            forw = forw + 1
+            if sym in SPACES:
+                continue
+            if sym == "(":
+                found = True
+            break
+        self.position = self.position - forw
+        return found
+
     def parse_text(self):
         sym = self.get_symbol()
         buf = ""
@@ -203,10 +219,12 @@ class parser(object):
         while sym != "" and (sym.isalpha() or (sym in NUMBERS) or (sym in spec)):
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbol()
+            if sym == ".":
+                break
         self.push_back()
         if len(buf) > 0:
             self.fname = buf in F
-            return True, buf, buf in RESERVED and "reserved" or (func or buf in VALUES) and "function" or "none", func
+            return True, buf, buf in RESERVED and "reserved" or (func or buf in VALUES) and "function" or ((buf[0].isalpha or buf[0] == "_") and self.bracket_follow()) and "call" or "none", func
         return False, "", "", False
 
     def get_next(self):
