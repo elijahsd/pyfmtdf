@@ -14,11 +14,11 @@ if __name__ == "__main__":
 
     fmt = formatter(palette)
     prs = parser(sys.argv[1])
-    print(fmt.start())
+    print(fmt.start(), end="")
     while True:
         item, etype, bold = prs.get_next()
         if item == "":
             break
         print(fmt.format(item, etype, bold), end="")
         #print(fmt.format(item, etype))
-    print(fmt.end())
+    print(fmt.end(), end="")
