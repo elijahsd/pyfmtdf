@@ -11,6 +11,7 @@ class formatter(object):
         return "</pre>"
 
     def esc(self, text):
+        text = text.replace("&" , "&amp;")
         text = text.replace("<" , "&lt;")
         text = text.replace(">" , "&gt;")
         return text
