@@ -2,7 +2,7 @@ palette = {
     "none": "",
     "text": "rgb(240, 240, 240)",
     "comment": "rgb(130, 130, 130)",
-    "string": "rgb(150, 200, 100)",
+    "string": "rgb(50, 120, 0)",
     "function": "rgb(50, 50, 200)",
     "reserved": "rgb(150, 50, 50)",
     "operator": "rgb(150, 150, 50)",
