@@ -5,14 +5,28 @@ import sys
 from pyfmtdf.pyfmtdf import pyfmtdf
 from pyfmtdf.pyfmtdf_checker import checker
 
+def usage():
+    print("Usage: program [--check] <script>")
+    sys.exit(1)
+
 if __name__ == "__main__":
+    check = False
+    f = None
 
-    if len(sys.argv) != 2:
-        print("Usage: program <script>")
-        sys.exit(1)
+    if (len(sys.argv) != 2) and (len(sys.argv) != 3):
+        usage()
 
-    tmp = pyfmtdf.doformat(sys.argv[1])
-    if checker.check(sys.argv[1], tmp):
+    if len(sys.argv) == 3:
+        if sys.argv[1] != "--check":
+            usage()
+        else:
+            check = True
+            f = sys.argv[2]
+    else:
+        f = sys.argv[1]
+
+    tmp = pyfmtdf.doformat(f)
+    if not check or checker.check(f, tmp):
         print(tmp, end="")
     else:
         print("ERROR: Something went wrong")
