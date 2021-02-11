@@ -11,7 +11,7 @@ class HTMLFilter(HTMLParser):
         if tag == "br":
             self.text += "\n"
 
-class checker(object):
+class Checker(object):
     def __init__(self):
         pass
 

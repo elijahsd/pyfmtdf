@@ -1,58 +1,13 @@
 import codecs
 
-SPACES = [" ", "\t"]
-
-RESERVED = [
-    "pass",
-    "break",
-    "continue",
-    "global",
-    "nonlocal",
-    "assert",
-    "del",
-    "import",
-    "from",
-    "as",
-    "if",
-    "elif",
-    "else",
-    "while",
-    "for",
-    "in",
-    "with",
-    "try",
-    "except",
-    "finally",
-    "return",
-    "raise",
-    "def",
-    "class",
-    "lambda",
-    "or",
-    "and",
-    "not",
-    "yield",
-]
-
-F = ["def", "class"]
-
-VALUES = ["True", "False", "None"]
-
-OPS = "=+-*@/%&|^<>:!~"
-
-BRACKETS="[]{}()"
-
-NUMBERS = "0123456789"
-
-TREATED_AS_TEXT ="_,.;"
-
-class parser(object):
-    def __init__(self, text):
+class Parser(object):
+    def __init__(self, text, rules):
         self.position = 0
         self.comment = False
         self.new_line = True
         self.opening = "\""
         self.fname = False
+        self.rules = rules
 
         self.parsers = [
             "parse_br",         # line breaks
@@ -80,7 +35,7 @@ class parser(object):
 
     def parse_br(self):
         sym = self.get_symbol()
-        if sym == '\n':
+        if sym == "\n":
             self.new_line = True
             return True, "<br>", "none", False
         self.push_back(sym)
@@ -107,7 +62,9 @@ class parser(object):
     def parse_comment(self):
         sym = self.get_symbol()
         buf = ""
-        if sym != "#":
+        # TODO: use multiple symbols, i.e. "//"
+        # TODO: multiline comment, i.e. "/* */" or '""" """' or "''' '''"
+        if sym != self.rules.one_line_comment:
             self.push_back(sym)
             return False, "", "", False
         while sym != "\n" and sym != "":
@@ -116,6 +73,7 @@ class parser(object):
         self.push_back(sym)
         return True, buf, "comment", False
 
+    # TODO: remove
     def triple_seq(self, sym):
         return len(self.text) > (self.position + 2) and self.text[self.position] == sym and self.text[self.position + 1] == sym
 
@@ -149,6 +107,7 @@ class parser(object):
                     buf = "{}{}".format(buf, sym)
                     return True, buf, "string", False
             else:
+                # TODO: create special rule
                 if sym == "\n":
                     self.push_back(sym)
                     return True, buf, "string", False
@@ -177,13 +136,13 @@ class parser(object):
         return False, "", "", False
 
     def parse_number(self):
-        return self.parse_symbols(NUMBERS, "number")
+        return self.parse_symbols(self.rules.numbers, "number")
 
     def parse_bracket(self):
-        return self.parse_symbols(BRACKETS, "bracket")
+        return self.parse_symbols(self.rules.brackets, "bracket")
 
     def parse_operator(self):
-        return self.parse_symbols(OPS, "operator")
+        return self.parse_symbols(self.rules.ops, "operator")
 
     def bracket_follow(self):
         forw = 0
@@ -193,7 +152,7 @@ class parser(object):
             if sym == "":
                 return False
             forw = forw + 1
-            if sym in SPACES:
+            if sym in self.rules.spaces:
                 continue
             if sym == "(":
                 found = True
@@ -206,17 +165,18 @@ class parser(object):
         buf = ""
         func = self.fname
         self.fname = False
-        while sym != "" and (sym.isalpha() or (sym in NUMBERS) or (sym in TREATED_AS_TEXT)):
+        while sym != "" and (sym.isalpha() or (sym in self.rules.numbers) or (sym in self.rules.treated_as_text)):
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbol()
-            if sym == ".":
+            # TODO: use multisymbol, i.e. "->"
+            if sym in self.rules.fields:
                 buf = "{}{}".format(buf, sym)
                 sym = self.get_symbol()
                 break
         self.push_back(sym)
         if len(buf) > 0:
-            self.fname = buf in F
-            return True, buf, (buf in RESERVED) and "reserved" or (func or (buf in VALUES)) and "function" or ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()) and "call" or "none", func
+            self.fname = buf in self.rules.f
+            return True, buf, (buf in self.rules.reserved) and "reserved" or (func or (buf in self.rules.values)) and "function" or ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()) and "call" or "none", func
         return False, "", "", False
 
     def get_next(self):

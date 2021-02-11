@@ -1,6 +1,6 @@
 import sys
 
-class formatter(object):
+class Formatter(object):
     def __init__(self, palette):
         self.palette = palette
 

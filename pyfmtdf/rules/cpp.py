@@ -1,0 +1,3 @@
+
+class rules(object):
+    pass
