@@ -33,11 +33,11 @@ To convert your python code into HTML:
 ### As a module
 
 It is possible to use import the module into your program:  
-`
+``` python
 from pyfmtdf import pyfmtdf
 
 out = pyfmtdf.pyfmtdf.doformat(<path to the script>)
-`
+```
 
 ## Linux users tips
 
