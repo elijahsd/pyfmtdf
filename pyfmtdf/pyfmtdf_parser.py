@@ -1,7 +1,5 @@
 import codecs
 
-DELIMS = [" ", "\t", "\n", "", "#", "\"", "\'"]
-
 SPACES = [" ", "\t"]
 
 RESERVED = [
@@ -40,11 +38,13 @@ F = ["def", "class"]
 
 VALUES = ["True", "False", "None"]
 
-OPS = "=+-*@/%&|^<>:!"
+OPS = "=+-*@/%&|^<>:!~"
 
 BRACKETS="[]{}()"
 
 NUMBERS = "0123456789"
+
+TREATED_AS_TEXT ="_,.;"
 
 class parser(object):
     def __init__(self, text):
@@ -204,10 +204,9 @@ class parser(object):
     def parse_text(self):
         sym = self.get_symbol()
         buf = ""
-        spec = ".,_"
         func = self.fname
         self.fname = False
-        while sym != "" and (sym.isalpha() or (sym in NUMBERS) or (sym in spec)):
+        while sym != "" and (sym.isalpha() or (sym in NUMBERS) or (sym in TREATED_AS_TEXT)):
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbol()
             if sym == ".":
