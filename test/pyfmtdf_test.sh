@@ -10,7 +10,7 @@ fi
 
 cat $1 | sed 's/\t/    /g' > /tmp/pyformatter.in
 
-python3 main.py $1 > /tmp/pyformatter.html
+python3 pyfmtdf.py $1 > /tmp/pyformatter.html
 
 cat /tmp/pyformatter.html | w3m -dump -T text/html > /tmp/pyformatter.out
 truncate -s-1 /tmp/pyformatter.out
