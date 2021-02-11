@@ -26,7 +26,10 @@ if __name__ == "__main__":
         f = sys.argv[1]
 
     tmp = pyfmtdf.doformat(f)
-    if not check or checker.check(f, tmp):
+    if not check:
         print(tmp, end="")
     else:
-        print("ERROR: Something went wrong")
+        if checker.check(f, tmp):
+            print("SUCCESS: Looks good!")
+        else:
+            print("ERROR: Some differences!")

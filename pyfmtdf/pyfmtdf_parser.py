@@ -1,16 +1,5 @@
 import codecs
 
-"""
-    "comment": "rgb(150, 150, 150)",
-    "string": "rgb(150, 200, 100)",
-    "function": "rgb(50, 50, 200)",
-    "reserved": "rgb(180, 180, 50)",
-    "operator": "rgb(200, 180, 100)",
-    "call": "rgb(100, 100, 220)",
-    "bracket": "rgb(200, 180, 100)",
-    "number": "rgb(200, 50, 50)",
-"""
-
 DELIMS = [" ", "\t", "\n", "", "#", "\"", "\'"]
 
 SPACES = [" ", "\t"]
@@ -80,13 +69,13 @@ class parser(object):
             self.text = content_file.read()
 
     def get_symbol(self):
-        if len(self.text) <= self.position:
+        if len(self.text) == self.position:
             return ""
         self.position = self.position + 1
         return self.text[self.position - 1]
 
-    def push_back(self):
-        if len(self.text) > self.position:
+    def push_back(self, sym):
+        if sym != "":
             self.position = self.position - 1
 
     def parse_br(self):
@@ -94,7 +83,7 @@ class parser(object):
         if sym == '\n':
             self.new_line = True
             return True, "<br>", "none", False
-        self.push_back()
+        self.push_back(sym)
         return False, "", "", False
 
     def parse_space(self):
@@ -104,13 +93,13 @@ class parser(object):
         self.new_line = False
         sym = self.get_symbol()
         buf = ""
-        while sym == ' ' or sym == '\t':
-            if sym == ' ':
+        while sym == " " or sym == "\t":
+            if sym == " ":
                 buf = "{}{}".format(buf, sp)
             else:
                 buf = "{}{}{}{}{}".format(buf, sp, sp, sp, sp)
             sym = self.get_symbol()
-        self.push_back()
+        self.push_back(sym)
         if len(buf) > 0:
             return True, buf, "none", False
         return False, "", "", False
@@ -119,12 +108,12 @@ class parser(object):
         sym = self.get_symbol()
         buf = ""
         if sym != "#":
-            self.push_back()
+            self.push_back(sym)
             return False, "", "", False
-        while sym != '\n' or sym == '':
+        while sym != "\n" and sym != "":
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbol()
-        self.push_back()
+        self.push_back(sym)
         return True, buf, "comment", False
 
     def triple_seq(self, sym):
@@ -134,7 +123,7 @@ class parser(object):
         sym = self.get_symbol()
         buf = ""
         if not self.comment and sym != "\"" and sym != "\'":
-            self.push_back()
+            self.push_back(sym)
             return False, "", "", False
 
         if sym == "":
@@ -148,7 +137,7 @@ class parser(object):
                 self.comment = True
             buf = "{}{}".format(buf, sym)
         else:
-            self.push_back()
+            self.push_back(sym)
 
         esc = False
         while True:
@@ -161,7 +150,7 @@ class parser(object):
                     return True, buf, "string", False
             else:
                 if sym == "\n":
-                    self.push_back()
+                    self.push_back(sym)
                     return True, buf, "string", False
                 if sym == self.opening and not esc and self.triple_seq(sym):
                     buf = "{}{}{}{}".format(buf,sym, sym, sym)
@@ -182,7 +171,7 @@ class parser(object):
         while sym != "" and sym in symbols:
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbol()
-        self.push_back()
+        self.push_back(sym)
         if len(buf) > 0:
             return True, buf, ent, False
         return False, "", "", False
@@ -201,6 +190,8 @@ class parser(object):
         found = False
         while True:
             sym = self.get_symbol()
+            if sym == "":
+                return False
             forw = forw + 1
             if sym in SPACES:
                 continue
@@ -220,11 +211,13 @@ class parser(object):
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbol()
             if sym == ".":
+                buf = "{}{}".format(buf, sym)
+                sym = self.get_symbol()
                 break
-        self.push_back()
+        self.push_back(sym)
         if len(buf) > 0:
             self.fname = buf in F
-            return True, buf, buf in RESERVED and "reserved" or (func or buf in VALUES) and "function" or ((buf[0].isalpha or buf[0] == "_") and self.bracket_follow()) and "call" or "none", func
+            return True, buf, (buf in RESERVED) and "reserved" or (func or (buf in VALUES)) and "function" or ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()) and "call" or "none", func
         return False, "", "", False
 
     def get_next(self):
