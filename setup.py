@@ -7,5 +7,5 @@ setup(name='pyfmtdf',
       author='Illia Ragozin',
       author_email='elijah.ragozin@gmail.com',
       license='MIT',
-      packages=['pyfmtdf'],
+      packages=['pyfmtdf', 'pyfmtdf.palettes', 'pyfmtdf.rules'],
       zip_safe=False)
