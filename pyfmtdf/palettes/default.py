@@ -1,6 +1,6 @@
 palette = {
     "none": "",
-    "text": "rgb(240, 240, 240)",
+    "text": "rgb(40, 40, 40)",
     "comment": "rgb(130, 130, 130)",
     "string": "rgb(50, 120, 0)",
     "function": "rgb(50, 50, 200)",
@@ -9,4 +9,5 @@ palette = {
     "call": "rgb(100, 100, 220)",
     "bracket": "rgb(100, 100, 200)",
     "number": "rgb(200, 50, 50)",
+    "field": "",
 }

@@ -15,6 +15,6 @@ class rules(object):
     ops = "=+-*@/%&|^<>:!~\\"
     brackets="[]{}()"
     numbers = "0123456789"
-    treated_as_text = "_,.;"
+    treated_as_text = "_"
     one_line_comment = "#"
-    fields = "."
+    fields = ".,;"

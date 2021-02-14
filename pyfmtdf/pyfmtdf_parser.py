@@ -17,6 +17,7 @@ class Parser(object):
             "parse_number",     # numbers 
             "parse_bracket",    # brackets 
             "parse_operator",   # operators
+            "parse_field",      # fields
             "parse_text",       # text 
         ]
 
@@ -144,6 +145,9 @@ class Parser(object):
     def parse_operator(self):
         return self.parse_symbols(self.rules.ops, "operator")
 
+    def parse_field(self):
+        return self.parse_symbols(self.rules.fields, "field")
+
     def bracket_follow(self):
         forw = 0
         found = False
@@ -168,11 +172,6 @@ class Parser(object):
         while sym != "" and (sym.isalpha() or (sym in self.rules.numbers) or (sym in self.rules.treated_as_text)):
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbol()
-            # TODO: use multisymbol, i.e. "->"
-            if sym in self.rules.fields:
-                buf = "{}{}".format(buf, sym)
-                sym = self.get_symbol()
-                break
         self.push_back(sym)
         if len(buf) > 0:
             self.fname = buf in self.rules.f
