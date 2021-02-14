@@ -12,7 +12,7 @@ class rules(object):
     ]
     f = ["def", "class"]
     values = ["True", "False", "None"]
-    ops = "=+-*@/%&|^<>:!~"
+    ops = "=+-*@/%&|^<>:!~\\"
     brackets="[]{}()"
     numbers = "0123456789"
     treated_as_text = "_,.;"
