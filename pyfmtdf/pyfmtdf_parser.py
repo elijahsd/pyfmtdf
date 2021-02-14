@@ -1,5 +1,3 @@
-import codecs
-
 class Parser(object):
     def __init__(self, text, rules):
         self.position = 0
