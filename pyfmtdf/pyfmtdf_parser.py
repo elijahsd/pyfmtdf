@@ -1,11 +1,11 @@
 class Parser(object):
     def __init__(self, text, rules):
         self.position = 0
-        self.comment = False
+        self.comment = None
         self.new_line = True
-        self.opening = "\""
         self.fname = False
         self.rules = rules
+        self.overflow = False
 
         self.parsers = [
             "parse_br",         # line breaks
@@ -22,117 +22,118 @@ class Parser(object):
         with open(text, 'r') as content_file:
             self.text = content_file.read()
 
-    def get_symbol(self):
+    def get_symbols(self, count = 1):
         if len(self.text) == self.position:
+            self.overflow = True
             return ""
-        self.position = self.position + 1
-        return self.text[self.position - 1]
+        if len(self.text) < self.position + count:
+            return ""
+        self.position = self.position + count
+        return self.text[self.position - count:self.position]
 
-    def push_back(self, sym):
-        if sym != "":
-            self.position = self.position - 1
+    def push_back(self, pos = 1):
+        if not self.overflow:
+            self.position = self.position - pos
 
     def parse_br(self):
-        sym = self.get_symbol()
+        sym = self.get_symbols()
         if sym == "\n":
             self.new_line = True
-            return True, "<br>", "none", False
-        self.push_back(sym)
-        return False, "", "", False
+            return True, "<br>", "none"
+        self.push_back()
+        return False, "", ""
 
     def parse_space(self):
         sp = "&nbsp;"
         if not self.new_line:
             sp = " "
+        # parse_space is called right after parse_br
+        # so this is an appropriate place to reset new_line
+        # At the beginning we use non-break spaces, and then we are fine
+        # to use regular ones and allow the line to break
         self.new_line = False
-        sym = self.get_symbol()
+        sym = self.get_symbols()
         buf = ""
         while sym == " " or sym == "\t":
             if sym == " ":
                 buf = "{}{}".format(buf, sp)
             else:
                 buf = "{}{}{}{}{}".format(buf, sp, sp, sp, sp)
-            sym = self.get_symbol()
-        self.push_back(sym)
+            sym = self.get_symbols()
+        self.push_back()
         if len(buf) > 0:
-            return True, buf, "none", False
-        return False, "", "", False
+            return True, buf, "none"
+        return False, "", ""
+
+    def parse_comment_single(self, boundaries):
+        if self.comment != None:
+            if self.comment != boundaries:
+                return ""
+        start = boundaries[0]
+        end = boundaries[1]
+        esc = boundaries[2]
+        syms = ""
+        if self.comment == None:
+            syms = self.get_symbols(len(start))
+            if syms == "":
+                return ""
+            if syms != start:
+                self.push_back(len(syms))
+                return ""
+            self.comment = boundaries
+        buf = ""
+        buf += syms
+        sym = self.get_symbols()
+        while sym != "":
+            if sym == "\n" and end != "\n":
+                break
+            buf += sym
+            sym = self.get_symbols()
+            if len(buf) < (len(start) + len(end)):
+                continue
+            # check for the end of the comment, make sure the leading symbol is not escaped
+            escaped = False
+            if len(buf) > (len(start) + len(end)):
+                pred = buf[-len(end)-1:-len(end)]
+                escaped = pred in esc
+            if not escaped and buf[-len(end):] == end:
+                # special case, eol
+                if end == '\n':
+                    self.push_back()
+                    buf = buf[:-1]
+                self.comment = None
+                break
+        self.push_back()
+        return buf
 
     def parse_comment(self):
-        sym = self.get_symbol()
-        buf = ""
-        # TODO: use multiple symbols, i.e. "//"
-        # TODO: multiline comment, i.e. "/* */" or '""" """' or "''' '''"
-        if sym != self.rules.one_line_comment:
-            self.push_back(sym)
-            return False, "", "", False
-        while sym != "\n" and sym != "":
-            buf = "{}{}".format(buf, sym)
-            sym = self.get_symbol()
-        self.push_back(sym)
-        return True, buf, "comment", False
-
-    # TODO: remove
-    def triple_seq(self, sym):
-        return len(self.text) > (self.position + 2) and self.text[self.position] == sym and self.text[self.position + 1] == sym
+        for c in self.rules.comment:
+            r = self.parse_comment_single(c)
+            if r:
+                return True, r, "comment"
+        for c in self.rules.comment_string:
+            r = self.parse_comment_single(c)
+            if r:
+                return True, r, "string"
+        return False, "", ""
 
     def parse_string(self):
-        sym = self.get_symbol()
-        buf = ""
-        if not self.comment and sym != "\"" and sym != "\'":
-            self.push_back(sym)
-            return False, "", "", False
-
-        if sym == "":
-            return False, "", "", False
-
-        if not self.comment:
-            self.opening = sym
-            if self.triple_seq(sym):
-                buf = "{}{}".format(sym, sym)
-                self.position = self.position + 2
-                self.comment = True
-            buf = "{}{}".format(buf, sym)
-        else:
-            self.push_back(sym)
-
-        esc = False
-        while True:
-            sym = self.get_symbol()
-            if sym == "":
-                break
-            if not self.comment:
-                if sym == self.opening and not esc:
-                    buf = "{}{}".format(buf, sym)
-                    return True, buf, "string", False
-            else:
-                # TODO: create special rule
-                if sym == "\n":
-                    self.push_back(sym)
-                    return True, buf, "string", False
-                if sym == self.opening and not esc and self.triple_seq(sym):
-                    buf = "{}{}{}{}".format(buf,sym, sym, sym)
-                    self.position = self.position + 2
-                    self.comment = False
-                    return True, buf, "string", False
-            buf = "{}{}".format(buf, sym)
-            if esc:
-                esc = False
-            elif sym == "\\":
-                esc = True
-
-        return False, "", "", False
+        for c in self.rules.string:
+            r = self.parse_comment_single(c)
+            if r:
+                return True, r, "string"
+        return False, "", ""
 
     def parse_symbols(self, symbols, ent):
-        sym = self.get_symbol()
+        sym = self.get_symbols()
         buf = ""
         while sym != "" and sym in symbols:
             buf = "{}{}".format(buf, sym)
-            sym = self.get_symbol()
-        self.push_back(sym)
+            sym = self.get_symbols()
+        self.push_back()
         if len(buf) > 0:
-            return True, buf, ent, False
-        return False, "", "", False
+            return True, buf, ent
+        return False, "", ""
 
     def parse_number(self):
         return self.parse_symbols(self.rules.numbers, "number")
@@ -150,9 +151,9 @@ class Parser(object):
         forw = 0
         found = False
         while True:
-            sym = self.get_symbol()
+            sym = self.get_symbols()
             if sym == "":
-                return False
+                break
             forw = forw + 1
             if sym in self.rules.spaces:
                 continue
@@ -163,23 +164,33 @@ class Parser(object):
         return found
 
     def parse_text(self):
-        sym = self.get_symbol()
+        sym = self.get_symbols()
         buf = ""
         func = self.fname
         self.fname = False
-        while sym != "" and (sym.isalpha() or (sym in self.rules.numbers) or (sym in self.rules.treated_as_text)):
+        while sym != "" and (sym in self.rules.text):
             buf = "{}{}".format(buf, sym)
-            sym = self.get_symbol()
-        self.push_back(sym)
+            sym = self.get_symbols()
+        self.push_back()
         if len(buf) > 0:
             self.fname = buf in self.rules.f
-            return True, buf, (buf in self.rules.reserved) and "reserved" or (func or (buf in self.rules.values)) and "function" or ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()) and "call" or "none", func
-        return False, "", "", False
+            t = "none"
+            if buf in self.rules.reserved:
+                t = "reserved"
+            elif func:
+                t = "function"
+            elif buf in self.rules.values:
+                t = "value"
+            elif ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()):
+                t = "call"
+            return True, buf, t
+        return False, "", ""
 
     def get_next(self):
         for f in self.parsers:
-            res, t, e, b = getattr(self, f)()
+            # Returns success, text result, type for formatting
+            res, t, e = getattr(self, f)()
             if res:
-                return t, e, b
+                return t, e, e in self.rules.highlight
 
         return "", "", False

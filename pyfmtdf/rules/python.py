@@ -15,6 +15,9 @@ class rules(object):
     ops = "=+-*@/%&|^<>:!~\\"
     brackets="[]{}()"
     numbers = "0123456789"
-    treated_as_text = "_"
-    one_line_comment = "#"
+    text = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_"
+    comment = [["#", "\n", ""]]
+    comment_string = [["\"\"\"", "\"\"\"", ""], ["'''", "'''", ""]]
+    string = [["\"", "\"", "\\"], ["'", "'", "\\"]]
     fields = ".,;"
+    highlight = ["function"]

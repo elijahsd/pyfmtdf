@@ -4,6 +4,7 @@ palette = {
     "comment": "rgb(130, 130, 130)",
     "string": "rgb(50, 120, 0)",
     "function": "rgb(50, 50, 200)",
+    "value": "rgb(50, 50, 200)",
     "reserved": "rgb(150, 50, 50)",
     "operator": "rgb(150, 150, 50)",
     "call": "rgb(100, 100, 220)",
