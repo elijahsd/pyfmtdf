@@ -69,6 +69,7 @@ class Parser(object):
         if self.comment != None:
             if self.comment != boundaries:
                 return ""
+        multiline = self.comment == boundaries
         start = boundaries[0]
         end = boundaries[1]
         esc = boundaries[2]
@@ -89,11 +90,11 @@ class Parser(object):
                 break
             buf += sym
             sym = self.get_symbols()
-            if len(buf) < (len(start) + len(end)):
+            if len(buf) < (len(start)*(not multiline and 1 or 0) + len(end)):
                 continue
             # check for the end of the comment, make sure the leading symbol is not escaped
             escaped = False
-            if len(buf) > (len(start) + len(end)):
+            if len(buf) > (len(start)*(not multiline and 1 or 0) + len(end)):
                 pred = buf[-len(end)-1:-len(end)]
                 escaped = pred in esc
             if not escaped and buf[-len(end):] == end:
