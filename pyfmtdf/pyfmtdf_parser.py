@@ -36,14 +36,18 @@ class Parser(object):
             self.position = self.position - pos
 
     def parse_br(self):
+        print("br")
         sym = self.get_symbols()
         if sym == "\n":
             self.new_line = True
+            print("    S")
             return True, "<br>", "none"
         self.push_back()
+        print("    F")
         return False, "", ""
 
     def parse_space(self):
+        print("space")
         sp = "&nbsp;"
         if not self.new_line:
             sp = " "
@@ -62,7 +66,9 @@ class Parser(object):
             sym = self.get_symbols()
         self.push_back()
         if len(buf) > 0:
+            print("    S")
             return True, buf, "none"
+        print("    F")
         return False, "", ""
 
     def parse_comment_single(self, boundaries):
@@ -108,24 +114,32 @@ class Parser(object):
         return buf
 
     def parse_comment(self):
+        print("comment")
         for c in self.rules.comment:
             r = self.parse_comment_single(c)
             if r:
+                print("    S")
                 return True, r, "comment"
         for c in self.rules.comment_string:
             r = self.parse_comment_single(c)
             if r:
+                print("    S")
                 return True, r, "string"
+        print("    F")
         return False, "", ""
 
     def parse_string(self):
+        print("string")
         for c in self.rules.string:
             r = self.parse_comment_single(c)
             if r:
+                print("    S")
                 return True, r, "string"
+        print("    F")
         return False, "", ""
 
     def parse_symbols(self, symbols, ent):
+        print(ent)
         sym = self.get_symbols()
         buf = ""
         while sym != "" and sym in symbols:
@@ -133,7 +147,9 @@ class Parser(object):
             sym = self.get_symbols()
         self.push_back()
         if len(buf) > 0:
+            print("    S")
             return True, buf, ent
+        print("    F")
         return False, "", ""
 
     def parse_number(self):
@@ -165,6 +181,7 @@ class Parser(object):
         return found
 
     def parse_text(self):
+        print("text")
         sym = self.get_symbols()
         buf = ""
         func = self.fname
@@ -184,14 +201,18 @@ class Parser(object):
                 t = "value"
             elif ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()):
                 t = "call"
+            print("    S")
             return True, buf, t
+        print("    F")
         return False, "", ""
 
     def get_next(self):
+        print("\n\n\nTEXT>>>>\n{}\n\n".format(self.text[self.position:]))
         for f in self.parsers:
             # Returns success, text result, type for formatting
             res, t, e = getattr(self, f)()
             if res:
+                print(">>", t)
                 return t, e, e in self.rules.highlight
 
         return "", "", False
