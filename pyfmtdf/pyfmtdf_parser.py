@@ -8,15 +8,14 @@ class Parser(object):
         self.overflow = False
 
         self.parsers = [
-            "parse_br",         # line breaks
-            "parse_space",      # spaces
-            "parse_comment",    # comments
-            "parse_string",     # strings 
-            "parse_number",     # numbers 
-            "parse_bracket",    # brackets 
-            "parse_operator",   # operators
-            "parse_field",      # fields
-            "parse_text",       # text 
+            "parse_br",                # line breaks
+            "parse_space",             # spaces
+            "parse_comment_or_string", # comments and strings
+            "parse_number",            # numbers
+            "parse_bracket",           # brackets
+            "parse_operator",          # operators
+            "parse_field",             # fields
+            "parse_text",              # text
         ]
 
         with open(text, 'r') as content_file:
@@ -107,7 +106,7 @@ class Parser(object):
         self.push_back()
         return buf
 
-    def parse_comment(self):
+    def parse_comment_or_string(self):
         for c in self.rules.comment:
             r = self.parse_comment_single(c)
             if r:
@@ -116,9 +115,6 @@ class Parser(object):
             r = self.parse_comment_single(c)
             if r:
                 return True, r, "string"
-        return False, "", ""
-
-    def parse_string(self):
         for c in self.rules.string:
             r = self.parse_comment_single(c)
             if r:
@@ -133,6 +129,9 @@ class Parser(object):
             sym = self.get_symbols()
         self.push_back()
         if len(buf) > 0:
+            # if we expect the name after the reserved word
+            # this is not it
+            self.fname = False
             return True, buf, ent
         return False, "", ""
 
