@@ -168,12 +168,12 @@ class Parser(object):
         buf = ""
         func = self.fname
         self.fname = False
-        while sym != "" and (sym in self.rules.text):
+        # in case we are parsing a package, we want to treat a field as text
+        while sym != "" and (sym in self.rules.text or func and sym in self.rules.fields):
             buf = "{}{}".format(buf, sym)
             sym = self.get_symbols()
         self.push_back()
         if len(buf) > 0:
-            self.fname = buf in self.rules.f
             t = "none"
             if buf in self.rules.reserved:
                 t = "reserved"
@@ -183,6 +183,7 @@ class Parser(object):
                 t = "value"
             elif ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()):
                 t = "call"
+            self.fname = func or (buf in self.rules.f)
             return True, buf, t
         return False, "", ""
 
