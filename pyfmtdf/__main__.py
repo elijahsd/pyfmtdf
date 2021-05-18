@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import importlib
 import sys
 
@@ -14,23 +15,18 @@ def usage():
     sys.exit(1)
 
 if __name__ == "__main__":
-    check = False
-    f = None
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file", help="Script to format")
+    parser.add_argument("-c", "--check", help="Check the result for validity", action="store_true")
+    parser.add_argument("-r", "--rule", help="Rules name (default: python)")
+    parser.add_argument("-p", "--palette", help="Palette name (default: default)")
+    args = parser.parse_args()
 
-    if (len(sys.argv) != 2) and (len(sys.argv) != 3):
-        usage()
+    check = args.check
+    f = args.file
 
-    if len(sys.argv) == 3:
-        if sys.argv[1] != "--check":
-            usage()
-        else:
-            check = True
-            f = sys.argv[2]
-    else:
-        f = sys.argv[1]
-
-    p = DEFAULT_PALETTE
-    r = DEFAULT_RULES
+    p = args.palette or DEFAULT_PALETTE
+    r = args.rule or DEFAULT_RULES
 
     palette_mod = importlib.import_module("pyfmtdf.palettes.{}".format(p))
     rules_mod = importlib.import_module("pyfmtdf.rules.{}".format(r))
