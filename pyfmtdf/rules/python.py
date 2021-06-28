@@ -12,6 +12,7 @@ class rules(object):
     ]
     f = ["def", "class"]
     values = ["True", "False", "None"]
+    types = []
     ops = "=+-*@/%&|^<>:!~\\"
     brackets="[]{}()"
     numbers = "0123456789"

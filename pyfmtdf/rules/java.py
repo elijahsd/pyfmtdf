@@ -14,9 +14,9 @@ class rules(object):
                 "while", \
     ]
     f = ["class", "package", "extends", "implements"]
-    values = ["true", "false", "null", "boolean", "this", "double", "byte", \
-                "enum", "int", "short", "char", "var", "long", "void", "const", \
-                "float", "volatile", ]
+    values = ["true", "false", "null", "this"]
+    types = ["boolean", "double", "byte", "enum", "int", "short", \
+             "char", "var", "long", "void", "const", "float", "volatile"]
     ops = "=+-*/%&|^<>?:!~\\"
     brackets="[]{}();"
     numbers = "0123456789"

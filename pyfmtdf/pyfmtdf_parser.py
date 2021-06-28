@@ -177,10 +177,12 @@ class Parser(object):
             t = "none"
             if buf in self.rules.reserved:
                 t = "reserved"
-            elif func:
-                t = "function"
             elif buf in self.rules.values:
                 t = "value"
+            elif buf in self.rules.types:
+                t = "type"
+            elif func:
+                t = "function"
             elif ((buf[0].isalpha() or (buf[0] == "_")) and self.bracket_follow()):
                 t = "call"
             self.fname = func or (buf in self.rules.f)
